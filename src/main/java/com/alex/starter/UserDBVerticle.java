@@ -53,6 +53,7 @@ public class UserDBVerticle extends AbstractVerticle {
         SQLConnection sqlConnection= conn.result();
         sqlConnection.rxUpdateWithParams(addPersonSQL,addUserParam)
           .flatMap(result-> sqlConnection.rxQueryWithParams("select id from person where username=?", new JsonArray().add(username)))
+
           .compose(res-> res.map(resultSet -> {
              List<JsonArray> resultList = resultSet.getResults();
              JsonArray jsonArray = resultList.get(0);
@@ -60,11 +61,11 @@ public class UserDBVerticle extends AbstractVerticle {
              System.out.println(id);
              insertKinParams.add(id);
              sqlConnection.rxUpdateWithParams(insertKin, insertKinParams)
-               .doOnTerminate(sqlConnection::rxClose)
                .subscribe(result-> System.out.println("updated Kin"));
              return res.toFuture();
 
            }))
+          .doOnTerminate(sqlConnection::rxClose)
           .subscribe();
 
       }
